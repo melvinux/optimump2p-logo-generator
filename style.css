@@ -1,0 +1,53 @@
+body {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  background: #f2f6ff;
+  color: #003366;
+}
+
+canvas {
+  border: 2px solid #003366;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+button {
+  background-color: #0066ff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  margin: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #004ecc;
+}
+/* === Optimump2p Header Styling (Fixed) === */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  background-color: #0a1a3d;
+  padding: 15px 20px;
+  border-bottom: 3px solid #007bff;
+}
+
+.logo {
+  width: 60px;
+  height: auto;
+  /* Remove the filter below if your logo is already visible */
+  /* filter: brightness(0) invert(1); */
+}
+
+
+header h1 {
+  color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 0 0 5px rgba(0, 123, 255, 0.6);
+}
