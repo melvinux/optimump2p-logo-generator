@@ -1,18 +1,14 @@
-// --- Setup Canvas ---
 const canvas = document.getElementById('pfpCanvas');
 const ctx = canvas.getContext('2d');
 
-// Base background
+// --- Base background ---
 ctx.fillStyle = '#a8c7ff';
 ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-// --- Load Optimump2p Logo ---
-const logo = new Image();
-logo.src = 'assets/optimump2p-logo.png';
 
 // --- Upload and Preview PFP ---
 const pfpUpload = document.getElementById('pfpUpload');
 const pfpPreview = document.getElementById('pfpPreview');
+let uploadedImg = null;
 
 pfpUpload.addEventListener('change', (event) => {
   const file = event.target.files[0];
@@ -20,53 +16,49 @@ pfpUpload.addEventListener('change', (event) => {
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    const img = new Image();
-    img.onload = () => {
-      // Clear the canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw uploaded image centered and scaled
-      const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-      const x = (canvas.width - img.width * scale) / 2;
-      const y = (canvas.height - img.height * scale) / 2;
-      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-
-      // Draw Optimump2p watermark (bottom-right)
-      logo.onload = () => {
-        const logoSize = 60; // adjust if too big/small
-        const logoX = canvas.width - logoSize - 10;
-        const logoY = canvas.height - logoSize - 10;
-        ctx.globalAlpha = 0.9; // slightly transparent
-        ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
-        ctx.globalAlpha = 1.0;
-      };
-      if (logo.complete) logo.onload();
-
-      // Also show preview
+    uploadedImg = new Image();
+    uploadedImg.onload = () => {
+      drawCanvas();
       pfpPreview.src = e.target.result;
       pfpPreview.style.display = "block";
       pfpPreview.style.maxWidth = "200px";
       pfpPreview.style.borderRadius = "10px";
     };
-    img.src = e.target.result;
+    uploadedImg.src = e.target.result;
   };
   reader.readAsDataURL(file);
 });
 
-// --- Add Cap ---
-document.getElementById('addCap').onclick = () => {
-  ctx.fillStyle = '#000080';
-  ctx.beginPath();
-  ctx.arc(200, 100, 60, Math.PI, 0);
-  ctx.fill();
-  if (logo.complete) logo.onload();
+// --- Function to draw uploaded image ---
+function drawCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#a8c7ff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (uploadedImg) {
+    const scale = Math.min(canvas.width / uploadedImg.width, canvas.height / uploadedImg.height);
+    const x = (canvas.width - uploadedImg.width * scale) / 2;
+    const y = (canvas.height - uploadedImg.height * scale) / 2;
+    ctx.drawImage(uploadedImg, x, y, uploadedImg.width * scale, uploadedImg.height * scale);
+  }
+}
+
+// --- Add Sticker 1 ---
+document.getElementById('addSticker1').onclick = () => {
+  const sticker1 = new Image();
+  sticker1.src = 'assets/optimum-sticker1.png'; // change filename to match your image
+  sticker1.onload = () => {
+    ctx.drawImage(sticker1, 250, 50, 100, 100); // adjust position & size as needed
+  };
 };
 
-// --- Add Sticker ---
-document.getElementById('addSticker').onclick = () => {
-  ctx.fillStyle = '#ff0000';
-  ctx.fillRect(150, 250, 100, 100);
-  if (logo.complete) logo.onload();
+// --- Add Sticker 2 ---
+document.getElementById('addSticker2').onclick = () => {
+  const sticker2 = new Image();
+  sticker2.src = 'assets/optimum-sticker2.png'; // change filename to match your image
+  sticker2.onload = () => {
+    ctx.drawImage(sticker2, 50, 250, 100, 100); // adjust position & size as needed
+  };
 };
 
 // --- Download PFP ---
@@ -76,4 +68,3 @@ document.getElementById('download').onclick = () => {
   link.href = canvas.toDataURL();
   link.click();
 };
-
