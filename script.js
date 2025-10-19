@@ -1,70 +1,91 @@
-const canvas = document.getElementById('pfpCanvas');
-const ctx = canvas.getContext('2d');
-
-// --- Base background ---
-ctx.fillStyle = '#a8c7ff';
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-// --- Upload and Preview PFP ---
 const pfpUpload = document.getElementById('pfpUpload');
-const pfpPreview = document.getElementById('pfpPreview');
-let uploadedImg = null;
+const preview = document.getElementById('preview');
+const editor = document.getElementById('editor');
+const stickerContainer = document.getElementById('sticker-container');
+const downloadBtn = document.getElementById('download');
 
-pfpUpload.addEventListener('change', (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
+// List your sticker paths here
+const stickers = [
+  "assets/stickers/mascot.2.png",
+  "assets/stickers/optimum-sticker 1.png",
+  "assets/stickers/optimum-sticker 2.png",
+  "assets/stickers/Sticker.png"
+];
 
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    uploadedImg = new Image();
-    uploadedImg.onload = () => {
-      drawCanvas();
-      pfpPreview.src = e.target.result;
-      pfpPreview.style.display = "block";
-      pfpPreview.style.maxWidth = "200px";
-      pfpPreview.style.borderRadius = "10px";
-    };
-    uploadedImg.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+// Load sticker previews
+stickers.forEach(src => {
+  const img = document.createElement("img");
+  img.src = src;
+  img.addEventListener("click", () => addSticker(src));
+  stickerContainer.appendChild(img);
 });
 
-// --- Function to draw uploaded image ---
-function drawCanvas() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#a8c7ff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  if (uploadedImg) {
-    const scale = Math.min(canvas.width / uploadedImg.width, canvas.height / uploadedImg.height);
-    const x = (canvas.width - uploadedImg.width * scale) / 2;
-    const y = (canvas.height - uploadedImg.height * scale) / 2;
-    ctx.drawImage(uploadedImg, x, y, uploadedImg.width * scale, uploadedImg.height * scale);
+// Handle PFP upload
+pfpUpload.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      preview.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   }
+});
+
+// Add sticker to editor
+function addSticker(src) {
+  const sticker = document.createElement("img");
+  sticker.src = src;
+  sticker.classList.add("sticker");
+  sticker.style.left = "100px";
+  sticker.style.top = "100px";
+  editor.appendChild(sticker);
+
+  // Make sticker draggable
+  interact(sticker).draggable({
+    listeners: {
+      move(event) {
+        const target = event.target;
+        const x = (parseFloat(target.getAttribute("data-x")) || 0) + event.dx;
+        const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute("data-x", x);
+        target.setAttribute("data-y", y);
+      }
+    }
+  });
 }
 
-// --- Add Sticker 1 ---
-document.getElementById('addSticker1').onclick = () => {
-  const sticker1 = new Image();
-  sticker1.src = 'assets/optimum-sticker1.png'; // change filename to match your image
-  sticker1.onload = () => {
-    ctx.drawImage(sticker1, 250, 50, 100, 100); // adjust position & size as needed
-  };
-};
+// Download final image
+downloadBtn.addEventListener("click", () => {
+  if (!preview.src) {
+    alert("Please upload a PFP first!");
+    return;
+  }
 
-// --- Add Sticker 2 ---
-document.getElementById('addSticker2').onclick = () => {
-  const sticker2 = new Image();
-  sticker2.src = 'assets/optimum-sticker2.png'; // change filename to match your image
-  sticker2.onload = () => {
-    ctx.drawImage(sticker2, 50, 250, 100, 100); // adjust position & size as needed
-  };
-};
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  const rect = preview.getBoundingClientRect();
 
-// --- Download PFP ---
-document.getElementById('download').onclick = () => {
-  const link = document.createElement('a');
-  link.download = 'optimump2p_pfp.png';
-  link.href = canvas.toDataURL();
-  link.click();
-};
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+
+  const baseImg = new Image();
+  baseImg.src = preview.src;
+
+  baseImg.onload = () => {
+    ctx.drawImage(baseImg, 0, 0, rect.width, rect.height);
+
+    const stickers = editor.querySelectorAll(".sticker");
+    stickers.forEach(sticker => {
+      const x = (parseFloat(sticker.getAttribute("data-x")) || 0);
+      const y = (parseFloat(sticker.getAttribute("data-y")) || 0);
+      ctx.drawImage(sticker, x + 100, y + 100, sticker.width, sticker.height);
+    });
+
+    const link = document.createElement("a");
+    link.download = "Optimump2p_PFP.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+});

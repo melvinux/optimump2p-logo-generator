@@ -5,33 +5,225 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Optimump2p PFP Generator</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Poppins, sans-serif;
+      text-align: center;
+      background: #f4f7ff;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #0033a0;
+      color: white;
+      padding: 15px;
+    }
+
+    .logo {
+      width: 100px;
+    }
+
+    #sticker-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+
+    #sticker-container img {
+      width: 80px;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: transform 0.2s;
+    }
+
+    #sticker-container img:hover {
+      transform: scale(1.1);
+    }
+
+    #editor {
+      position: relative;
+      display: inline-block;
+      border: 2px dashed #0033a0;
+      border-radius: 10px;
+      overflow: hidden;
+      background: white;
+    }
+
+    #preview {
+      max-width: 300px;
+      border-radius: 10px;
+      display: block;
+    }
+
+    .draggable {
+      position: absolute;
+      cursor: move;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .controls {
+      margin: 20px 0;
+    }
+
+    button {
+      background: #0033a0;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #001f66;
+    }
+  </style>
 </head>
 <body>
-   <header>
-    
-  <img src="assets/optimump2p-logo.png" alt="Optimump2p Logo" class="logo">
+  <header>
+    <img src="assets/optimump2p-logo.png" alt="Optimump2p Logo" class="logo" />
+    <h1>Optimump2p PFP Generator</h1>
+  </header>
 
+  <section class="upload-section">
+    <h2>Upload your PFP</h2>
+    <input type="file" id="pfpUpload" accept="image/*" />
+  </section>
 
-  <h1>Optimump2p PFP Generator</h1>
-</header>
-<section class="upload-section">
-  <h2>Upload your PFP</h2>
-  <input type="file" id="pfpUpload" accept="image/*">
-  <div class="preview-area">
-    <img id="pfpPreview" alt="Your PFP will appear here">
+  <!-- Sticker selection area -->
+  <div id="sticker-container"></div>
+
+  <!-- Image editor -->
+  <div class="preview-area" style="display:flex; justify-content:center; align-items:center;">
+    <div id="editor">
+      <img id="preview" alt="Your PFP will appear here" />
+    </div>
   </div>
-</section>
 
-
-  <canvas id="pfpCanvas" width="400" height="400"></canvas>
-  
+  <!-- Download button -->
   <div class="controls">
-  <button id="addSticker1">Add Sticker 1</button>
-  <button id="addSticker2">Add Sticker 2</button>
-  <button id="download">Download PFP</button>
-</div>
+    <button id="download">Download PFP</button>
+  </div>
 
+  <!-- InteractJS -->
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 
-  <script src="script.js"></script>
+  <!-- Main Script -->
+  <script>
+    const upload = document.getElementById("pfpUpload");
+    const preview = document.getElementById("preview");
+    const stickerContainer = document.getElementById("sticker-container");
+    const editor = document.getElementById("editor");
+    const downloadBtn = document.getElementById("download");
+
+    // Add your sticker paths here
+    const stickers = [
+      "assets/stickers/mascot.2.png",
+      "assets/stickers/optimum-sticker 1.png",
+      "assets/stickers/optimum-sticker 2.png",
+      "assets/stickers/Sticker.png"
+    ];
+
+    // Load sticker thumbnails
+    stickers.forEach(src => {
+      const img = document.createElement("img");
+      img.src = src;
+      img.onclick = () => addSticker(src);
+      stickerContainer.appendChild(img);
+    });
+
+    // Handle PFP upload
+    upload.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = event => {
+          preview.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Add sticker with drag/resize/rotate functionality
+    function addSticker(src) {
+      const sticker = document.createElement("img");
+      sticker.src = src;
+      sticker.classList.add("draggable");
+      sticker.style.width = "100px";
+      sticker.style.top = "50%";
+      sticker.style.left = "50%";
+      sticker.style.transform = "translate(-50%, -50%)";
+      editor.appendChild(sticker);
+
+      interact(sticker)
+        .draggable({
+          listeners: {
+            move(event) {
+              const target = event.target;
+              const x = (parseFloat(target.getAttribute("data-x")) || 0) + event.dx;
+              const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
+
+              target.style.transform = `translate(${x}px, ${y}px) scale(${target.dataset.scale || 1}) rotate(${target.dataset.rotation || 0}deg)`;
+              target.setAttribute("data-x", x);
+              target.setAttribute("data-y", y);
+            }
+          }
+        })
+        .gesturable({
+          listeners: {
+            move(event) {
+              const target = event.target;
+              const rotation = (parseFloat(target.dataset.rotation) || 0) + event.da;
+              const scale = (parseFloat(target.dataset.scale) || 1) * (1 + event.ds);
+
+              target.dataset.rotation = rotation;
+              target.dataset.scale = scale;
+
+              const x = parseFloat(target.getAttribute("data-x")) || 0;
+              const y = parseFloat(target.getAttribute("data-y")) || 0;
+
+              target.style.transform = `translate(${x}px, ${y}px) scale(${scale}) rotate(${rotation}deg)`;
+            }
+          }
+        });
+    }
+
+    // Download final image
+    downloadBtn.addEventListener("click", () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const rect = preview.getBoundingClientRect();
+
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
+      ctx.drawImage(preview, 0, 0, canvas.width, canvas.height);
+
+      const allStickers = editor.querySelectorAll(".draggable");
+      allStickers.forEach(sticker => {
+        const x = (parseFloat(sticker.getAttribute("data-x")) || 0) + rect.width / 2 - sticker.width / 2;
+        const y = (parseFloat(sticker.getAttribute("data-y")) || 0) + rect.height / 2 - sticker.height / 2;
+        const rotation = parseFloat(sticker.dataset.rotation) || 0;
+        const scale = parseFloat(sticker.dataset.scale) || 1;
+
+        ctx.save();
+        ctx.translate(x + sticker.width / 2, y + sticker.height / 2);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.scale(scale, scale);
+        ctx.drawImage(sticker, -sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
+        ctx.restore();
+      });
+
+      const link = document.createElement("a");
+      link.download = "optimump2p-pfp.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+  </script>
 </body>
 </html>

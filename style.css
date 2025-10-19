@@ -1,53 +1,88 @@
 body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f7fc;
+  margin: 0;
+  padding: 0;
   text-align: center;
-  font-family: Arial, sans-serif;
-  background: #f2f6ff;
-  color: #003366;
+  color: #333;
 }
 
-canvas {
-  border: 2px solid #003366;
+header {
+  background-color: #0a66c2;
+  color: white;
+  padding: 20px;
+}
+
+.logo {
+  width: 80px;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+.upload-section, .sticker-section {
+  margin: 20px;
+}
+
+#sticker-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+}
+
+#sticker-container img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  cursor: pointer;
+  border: 2px solid transparent;
   border-radius: 10px;
+  transition: 0.2s;
+}
+
+#sticker-container img:hover {
+  border-color: #0a66c2;
+  transform: scale(1.05);
+}
+
+.preview-area {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+#editor {
+  position: relative;
+  display: inline-block;
+}
+
+#preview {
+  max-width: 300px;
+  border-radius: 10px;
+}
+
+.sticker {
+  position: absolute;
+  width: 80px;
+  cursor: move;
+  user-select: none;
+}
+
+.controls {
   margin-top: 20px;
 }
 
 button {
-  background-color: #0066ff;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #0a66c2;
   color: white;
   border: none;
-  padding: 10px 20px;
-  margin: 10px;
   border-radius: 8px;
   cursor: pointer;
+  transition: 0.2s;
 }
 
 button:hover {
-  background-color: #004ecc;
-}
-/* === Optimump2p Header Styling (Fixed) === */
-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  background-color: #0a1a3d;
-  padding: 15px 20px;
-  border-bottom: 3px solid #007bff;
-}
-
-.logo {
-  width: 60px;
-  height: auto;
-  /* Remove the filter below if your logo is already visible */
-  /* filter: brightness(0) invert(1); */
-}
-
-
-header h1 {
-  color: #ffffff;
-  font-family: 'Poppins', sans-serif;
-  font-size: 26px;
-  font-weight: 600;
-  margin: 0;
-  text-shadow: 0 0 5px rgba(0, 123, 255, 0.6);
+  background-color: #094a8f;
 }
