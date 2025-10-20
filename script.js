@@ -10,12 +10,15 @@ const stickers = [
   "assets/optimum-sticker3.png"
 ];
 
-// === Add sticker buttons ===
+// === Load sticker options ===
 stickers.forEach((src, i) => {
-  const btn = document.createElement("button");
-  btn.textContent = `Sticker ${i + 1}`;
-  btn.addEventListener("click", () => addSticker(src));
-  stickerContainer.appendChild(btn);
+  const img = document.createElement("img");
+  img.src = src;
+  img.style.width = "80px";
+  img.style.cursor = "pointer";
+  img.style.borderRadius = "8px";
+  img.addEventListener("click", () => addSticker(src));
+  stickerContainer.appendChild(img);
 });
 
 // === Upload PFP ===
@@ -27,7 +30,7 @@ upload.addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
-// === Add Sticker ===
+// === Add draggable + resizable sticker ===
 function addSticker(src) {
   const sticker = document.createElement("img");
   sticker.src = src;
@@ -35,9 +38,9 @@ function addSticker(src) {
   sticker.style.position = "absolute";
   sticker.style.top = "50%";
   sticker.style.left = "50%";
-  sticker.style.width = "80px";
-  sticker.style.cursor = "move";
+  sticker.style.width = "100px";
   sticker.style.transform = "translate(-50%, -50%)";
+  sticker.style.cursor = "move";
   editor.appendChild(sticker);
 
   interact(sticker)
@@ -58,7 +61,6 @@ function addSticker(src) {
       listeners: {
         move(event) {
           let { x, y } = event.target.dataset;
-
           x = (parseFloat(x) || 0) + event.deltaRect.left;
           y = (parseFloat(y) || 0) + event.deltaRect.top;
 
@@ -74,7 +76,7 @@ function addSticker(src) {
     });
 }
 
-// === Download ===
+// === High-quality Download (no shift) ===
 downloadBtn.addEventListener("click", async () => {
   if (!preview.src) return alert("Please upload an image first.");
 
@@ -85,24 +87,26 @@ downloadBtn.addEventListener("click", async () => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
 
-  // Match original image size
   canvas.width = img.naturalWidth;
   canvas.height = img.naturalHeight;
 
-  // Draw main PFP
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-  // Scale factor (display vs. actual image)
-  const scale = canvas.width / preview.clientWidth;
+  // Use image's displayed bounding box for scaling reference
+  const previewRect = preview.getBoundingClientRect();
+  const scaleX = canvas.width / previewRect.width;
+  const scaleY = canvas.height / previewRect.height;
 
-  // Draw stickers at correct scaled position
+  // Draw stickers accurately
   document.querySelectorAll(".sticker").forEach((sticker) => {
-    const rect = sticker.getBoundingClientRect();
-    const parentRect = editor.getBoundingClientRect();
-    const x = (rect.left - parentRect.left) * scale;
-    const y = (rect.top - parentRect.top) * scale;
-    const width = rect.width * scale;
-    const height = rect.height * scale;
+    const sRect = sticker.getBoundingClientRect();
+    const eRect = editor.getBoundingClientRect();
+
+    const x = (sRect.left - previewRect.left) * scaleX;
+    const y = (sRect.top - previewRect.top) * scaleY;
+    const width = sRect.width * scaleX;
+    const height = sRect.height * scaleY;
+
     ctx.drawImage(sticker, x, y, width, height);
   });
 
@@ -111,4 +115,5 @@ downloadBtn.addEventListener("click", async () => {
   link.href = canvas.toDataURL("image/png");
   link.click();
 });
+
 
