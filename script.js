@@ -1,40 +1,45 @@
 const upload = document.getElementById("pfpUpload");
 const preview = document.getElementById("preview");
-const editor = document.getElementById("editor");
 const stickerContainer = document.getElementById("sticker-container");
+const editor = document.getElementById("editor");
 const downloadBtn = document.getElementById("download");
 
+// List of stickers
 const stickers = [
-  "assets/optimum-sticker1.png",
-  "assets/optimum-sticker2.png",
-  "assets/optimum-sticker3.png"
+  "assets/stickers/mascot.2.png",
+  "assets/stickers/optimum-sticker 1.png",
+  "assets/stickers/optimum-sticker 2.png",
+  "assets/stickers/Sticker.png"
 ];
 
-// === Load sticker options ===
-stickers.forEach((src, i) => {
+// Load sticker thumbnails
+stickers.forEach(src => {
   const img = document.createElement("img");
   img.src = src;
   img.style.width = "80px";
   img.style.cursor = "pointer";
-  img.style.borderRadius = "8px";
+  img.style.borderRadius = "10px";
   img.addEventListener("click", () => addSticker(src));
   stickerContainer.appendChild(img);
 });
 
-// === Upload PFP ===
-upload.addEventListener("change", (e) => {
+// Handle PFP upload
+upload.addEventListener("change", e => {
   const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => (preview.src = ev.target.result);
-  reader.readAsDataURL(file);
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      preview.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
 });
 
-// === Add draggable + resizable sticker ===
+// Add draggable/resizable sticker
 function addSticker(src) {
   const sticker = document.createElement("img");
   sticker.src = src;
-  sticker.classList.add("sticker");
+  sticker.classList.add("draggable");
   sticker.style.position = "absolute";
   sticker.style.top = "50%";
   sticker.style.left = "50%";
@@ -50,70 +55,73 @@ function addSticker(src) {
           const target = event.target;
           const x = (parseFloat(target.getAttribute("data-x")) || 0) + event.dx;
           const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
-          target.style.transform = `translate(${x}px, ${y}px)`;
+
+          target.style.transform = `translate(${x}px, ${y}px) rotate(${target.dataset.rotation || 0}deg) scale(${target.dataset.scale || 1})`;
           target.setAttribute("data-x", x);
           target.setAttribute("data-y", y);
-        },
-      },
+        }
+      }
     })
     .resizable({
       edges: { left: true, right: true, bottom: true, top: true },
       listeners: {
         move(event) {
-          let { x, y } = event.target.dataset;
-          x = (parseFloat(x) || 0) + event.deltaRect.left;
-          y = (parseFloat(y) || 0) + event.deltaRect.top;
-
-          Object.assign(event.target.style, {
-            width: `${event.rect.width}px`,
-            height: `${event.rect.height}px`,
-            transform: `translate(${x}px, ${y}px)`,
-          });
-
-          Object.assign(event.target.dataset, { x, y });
-        },
-      },
+          const target = event.target;
+          let { width, height } = event.rect;
+          target.style.width = `${width}px`;
+          target.style.height = `${height}px`;
+        }
+      }
     });
 }
 
-// === High-quality Download (no shift) ===
-downloadBtn.addEventListener("click", async () => {
-  if (!preview.src) return alert("Please upload an image first.");
-
-  const img = new Image();
-  img.src = preview.src;
-  await img.decode();
-
+// Download final PFP (high-res and aligned)
+downloadBtn.addEventListener("click", () => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
+  const rect = editor.getBoundingClientRect();
 
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  ctx.scale(2, 2);
 
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const baseImage = new Image();
+  baseImage.src = preview.src;
+  baseImage.onload = () => {
+    ctx.drawImage(baseImage, 0, 0, rect.width, rect.height);
 
-  // Use image's displayed bounding box for scaling reference
-  const previewRect = preview.getBoundingClientRect();
-  const scaleX = canvas.width / previewRect.width;
-  const scaleY = canvas.height / previewRect.height;
+    const stickers = editor.querySelectorAll(".draggable");
+    stickers.forEach(sticker => {
+      const x = (parseFloat(sticker.getAttribute("data-x")) || 0);
+      const y = (parseFloat(sticker.getAttribute("data-y")) || 0);
+      const rotation = parseFloat(sticker.dataset.rotation) || 0;
+      const scale = parseFloat(sticker.dataset.scale) || 1;
 
-  // Draw stickers accurately
-  document.querySelectorAll(".sticker").forEach((sticker) => {
-    const sRect = sticker.getBoundingClientRect();
-    const eRect = editor.getBoundingClientRect();
+      const img = new Image();
+      img.src = sticker.src;
 
-    const x = (sRect.left - previewRect.left) * scaleX;
-    const y = (sRect.top - previewRect.top) * scaleY;
-    const width = sRect.width * scaleX;
-    const height = sRect.height * scaleY;
+      img.onload = () => {
+        const stickerRect = sticker.getBoundingClientRect();
+        const relativeX = stickerRect.left - rect.left;
+        const relativeY = stickerRect.top - rect.top;
 
-    ctx.drawImage(sticker, x, y, width, height);
-  });
+        ctx.save();
+        ctx.translate(relativeX + stickerRect.width / 2, relativeY + stickerRect.height / 2);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.scale(scale, scale);
+        ctx.drawImage(img, -stickerRect.width / 2, -stickerRect.height / 2, stickerRect.width, stickerRect.height);
+        ctx.restore();
+      };
+    });
 
-  const link = document.createElement("a");
-  link.download = "Optimump2p_PFP.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+    setTimeout(() => {
+      const link = document.createElement("a");
+      link.download = "optimump2p-pfp.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }, 1000);
+  };
 });
+
 
 
