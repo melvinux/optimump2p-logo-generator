@@ -1,13 +1,18 @@
-// === PFP Generator Script ===
-const uploadInput = document.getElementById("pfpUpload");
+const upload = document.getElementById("pfpUpload");
 const preview = document.getElementById("preview");
+const stickerContainer = document.getElementById("sticker-container");
 const editor = document.getElementById("editor");
 const downloadBtn = document.getElementById("download");
-const stickerContainer = document.getElementById("sticker-container");
 
-const stickers = ["assets/sticker1.png", "assets/sticker2.png"]; // Add your sticker paths
+// List your sticker image paths here (relative to your repo)
+const stickers = [
+  "assets/stickers/mascot.2.png",
+  "assets/stickers/optimum-sticker 1.png",
+  "assets/stickers/optimum-sticker 2.png",
+  "assets/stickers/Sticker.png"
+];
 
-// --- Load sticker options ---
+// Load sticker thumbnails
 stickers.forEach(src => {
   const img = document.createElement("img");
   img.src = src;
@@ -18,42 +23,56 @@ stickers.forEach(src => {
   stickerContainer.appendChild(img);
 });
 
-uploadInput.addEventListener("change", (e) => {
+// Handle PFP upload
+upload.addEventListener("change", e => {
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      preview.src = ev.target.result;
+    reader.onload = function (event) {
+      preview.src = event.target.result;
     };
     reader.readAsDataURL(file);
   }
 });
 
-// --- Add sticker to editor ---
+// Add draggable + resizable sticker
 function addSticker(src) {
   const sticker = document.createElement("img");
   sticker.src = src;
-  sticker.className = "sticker";
+  sticker.classList.add("draggable");
   sticker.style.position = "absolute";
   sticker.style.top = "50%";
   sticker.style.left = "50%";
   sticker.style.width = "100px";
   sticker.style.transform = "translate(-50%, -50%)";
   sticker.style.cursor = "move";
-
+  sticker.style.userSelect = "none";
   editor.appendChild(sticker);
 
-  // Make draggable and resizable
   interact(sticker)
     .draggable({
       listeners: {
         move(event) {
           const target = event.target;
-          const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-          const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-          target.style.transform = `translate(${x}px, ${y}px)`;
-          target.setAttribute('data-x', x);
-          target.setAttribute('data-y', y);
+          const x = (parseFloat(target.getAttribute("data-x")) || 0) + event.dx;
+          const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
+          target.style.transform = `translate(${x}px, ${y}px) rotate(${target.dataset.rotation || 0}deg) scale(${target.dataset.scale || 1})`;
+          target.setAttribute("data-x", x);
+          target.setAttribute("data-y", y);
+        }
+      }
+    })
+    .gesturable({
+      listeners: {
+        move(event) {
+          const target = event.target;
+          const rotation = (parseFloat(target.dataset.rotation) || 0) + event.da;
+          const scale = (parseFloat(target.dataset.scale) || 1) * (1 + event.ds);
+          target.dataset.rotation = rotation;
+          target.dataset.scale = scale;
+          const x = parseFloat(target.getAttribute("data-x")) || 0;
+          const y = parseFloat(target.getAttribute("data-y")) || 0;
+          target.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
         }
       }
     })
@@ -61,71 +80,54 @@ function addSticker(src) {
       edges: { left: true, right: true, bottom: true, top: true },
       listeners: {
         move(event) {
-          let { x, y } = event.target.dataset;
-          x = (parseFloat(x) || 0) + event.deltaRect.left;
-          y = (parseFloat(y) || 0) + event.deltaRect.top;
-
-          Object.assign(event.target.style, {
-            width: `${event.rect.width}px`,
-            height: `${event.rect.height}px`,
-            transform: `translate(${x}px, ${y}px)`
-          });
-
-          Object.assign(event.target.dataset, { x, y });
+          const target = event.target;
+          let width = parseFloat(target.style.width) + event.deltaRect.width;
+          let height = parseFloat(target.style.height) + event.deltaRect.height;
+          target.style.width = `${width}px`;
+          target.style.height = `${height}px`;
         }
-      },
-      modifiers: [
-        interact.modifiers.restrictSize({
-          min: { width: 30, height: 30 },
-          max: { width: 400, height: 400 }
-        })
-      ]
+      }
     });
 }
 
-// --- Download combined image ---
+// High-quality download
 downloadBtn.addEventListener("click", () => {
-  if (!preview.src) return alert("Upload your PFP first!");
+  const baseImg = new Image();
+  baseImg.src = preview.src;
 
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+  baseImg.onload = () => {
+    const scaleFactor = 2; // makes the output sharper
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const rect = editor.getBoundingClientRect();
 
-  const img = new Image();
-  img.src = preview.src;
+    canvas.width = rect.width * scaleFactor;
+    canvas.height = rect.height * scaleFactor;
+    ctx.scale(scaleFactor, scaleFactor);
 
-  img.onload = () => {
-    const width = img.width;
-    const height = img.height;
+    // Draw base image
+    ctx.drawImage(preview, 0, 0, rect.width, rect.height);
 
-    // Set export canvas size same as original upload (for full quality)
-    canvas.width = width;
-    canvas.height = height;
+    // Draw stickers
+    const stickers = editor.querySelectorAll(".draggable");
+    stickers.forEach(sticker => {
+      const x = (parseFloat(sticker.getAttribute("data-x")) || 0) + rect.width / 2 - sticker.width / 2;
+      const y = (parseFloat(sticker.getAttribute("data-y")) || 0) + rect.height / 2 - sticker.height / 2;
+      const rotation = parseFloat(sticker.dataset.rotation) || 0;
+      const scale = parseFloat(sticker.dataset.scale) || 1;
 
-    // Draw uploaded image
-    ctx.drawImage(img, 0, 0, width, height);
-
-    // Draw stickers at correct scaled positions
-    const baseRect = preview.getBoundingClientRect();
-    const scaleX = width / baseRect.width;
-    const scaleY = height / baseRect.height;
-
-    const stickersOnCanvas = editor.querySelectorAll(".sticker");
-    stickersOnCanvas.forEach(st => {
-      const rect = st.getBoundingClientRect();
-      const relX = (rect.left - baseRect.left) * scaleX;
-      const relY = (rect.top - baseRect.top) * scaleY;
-      const stWidth = rect.width * scaleX;
-      const stHeight = rect.height * scaleY;
-
-      const sImg = new Image();
-      sImg.src = st.src;
-      ctx.drawImage(sImg, relX, relY, stWidth, stHeight);
+      ctx.save();
+      ctx.translate(x + sticker.width / 2, y + sticker.height / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.scale(scale, scale);
+      ctx.drawImage(sticker, -sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
+      ctx.restore();
     });
 
-    // Download full-quality PNG
+    // Download
     const link = document.createElement("a");
     link.download = "optimump2p-pfp.png";
-    link.href = canvas.toDataURL("image/png", 1.0);
+    link.href = canvas.toDataURL("image/png", 1.0); // max quality
     link.click();
   };
 });
