@@ -1,52 +1,43 @@
 const upload = document.getElementById("pfpUpload");
 const preview = document.getElementById("preview");
-const stickerContainer = document.getElementById("sticker-container");
 const editor = document.getElementById("editor");
+const stickerContainer = document.getElementById("sticker-container");
 const downloadBtn = document.getElementById("download");
 
-// List your sticker image paths here (relative to your repo)
 const stickers = [
-  "assets/stickers/mascot.2.png",
-  "assets/stickers/optimum-sticker 1.png",
-  "assets/stickers/optimum-sticker 2.png",
-  "assets/stickers/Sticker.png"
+  "assets/optimum-sticker1.png",
+  "assets/optimum-sticker2.png",
+  "assets/optimum-sticker3.png"
 ];
 
-// Load sticker thumbnails
-stickers.forEach(src => {
-  const img = document.createElement("img");
-  img.src = src;
-  img.style.width = "80px";
-  img.style.cursor = "pointer";
-  img.style.borderRadius = "10px";
-  img.addEventListener("click", () => addSticker(src));
-  stickerContainer.appendChild(img);
+// === Add sticker buttons ===
+stickers.forEach((src, i) => {
+  const btn = document.createElement("button");
+  btn.textContent = `Sticker ${i + 1}`;
+  btn.addEventListener("click", () => addSticker(src));
+  stickerContainer.appendChild(btn);
 });
 
-// Handle PFP upload
-upload.addEventListener("change", e => {
+// === Upload PFP ===
+upload.addEventListener("change", (e) => {
   const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      preview.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => (preview.src = ev.target.result);
+  reader.readAsDataURL(file);
 });
 
-// Add draggable + resizable sticker
+// === Add Sticker ===
 function addSticker(src) {
   const sticker = document.createElement("img");
   sticker.src = src;
-  sticker.classList.add("draggable");
+  sticker.classList.add("sticker");
   sticker.style.position = "absolute";
   sticker.style.top = "50%";
   sticker.style.left = "50%";
-  sticker.style.width = "100px";
-  sticker.style.transform = "translate(-50%, -50%)";
+  sticker.style.width = "80px";
   sticker.style.cursor = "move";
-  sticker.style.userSelect = "none";
+  sticker.style.transform = "translate(-50%, -50%)";
   editor.appendChild(sticker);
 
   interact(sticker)
@@ -56,78 +47,68 @@ function addSticker(src) {
           const target = event.target;
           const x = (parseFloat(target.getAttribute("data-x")) || 0) + event.dx;
           const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
-          target.style.transform = `translate(${x}px, ${y}px) rotate(${target.dataset.rotation || 0}deg) scale(${target.dataset.scale || 1})`;
+          target.style.transform = `translate(${x}px, ${y}px)`;
           target.setAttribute("data-x", x);
           target.setAttribute("data-y", y);
-        }
-      }
-    })
-    .gesturable({
-      listeners: {
-        move(event) {
-          const target = event.target;
-          const rotation = (parseFloat(target.dataset.rotation) || 0) + event.da;
-          const scale = (parseFloat(target.dataset.scale) || 1) * (1 + event.ds);
-          target.dataset.rotation = rotation;
-          target.dataset.scale = scale;
-          const x = parseFloat(target.getAttribute("data-x")) || 0;
-          const y = parseFloat(target.getAttribute("data-y")) || 0;
-          target.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
-        }
-      }
+        },
+      },
     })
     .resizable({
       edges: { left: true, right: true, bottom: true, top: true },
       listeners: {
         move(event) {
-          const target = event.target;
-          let width = parseFloat(target.style.width) + event.deltaRect.width;
-          let height = parseFloat(target.style.height) + event.deltaRect.height;
-          target.style.width = `${width}px`;
-          target.style.height = `${height}px`;
-        }
-      }
+          let { x, y } = event.target.dataset;
+
+          x = (parseFloat(x) || 0) + event.deltaRect.left;
+          y = (parseFloat(y) || 0) + event.deltaRect.top;
+
+          Object.assign(event.target.style, {
+            width: `${event.rect.width}px`,
+            height: `${event.rect.height}px`,
+            transform: `translate(${x}px, ${y}px)`,
+          });
+
+          Object.assign(event.target.dataset, { x, y });
+        },
+      },
     });
 }
 
-// High-quality download
-downloadBtn.addEventListener("click", () => {
-  const baseImg = new Image();
-  baseImg.src = preview.src;
+// === Download ===
+downloadBtn.addEventListener("click", async () => {
+  if (!preview.src) return alert("Please upload an image first.");
 
-  baseImg.onload = () => {
-    const scaleFactor = 2; // makes the output sharper
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const rect = editor.getBoundingClientRect();
+  const img = new Image();
+  img.src = preview.src;
+  await img.decode();
 
-    canvas.width = rect.width * scaleFactor;
-    canvas.height = rect.height * scaleFactor;
-    ctx.scale(scaleFactor, scaleFactor);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
 
-    // Draw base image
-    ctx.drawImage(preview, 0, 0, rect.width, rect.height);
+  // Match original image size
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
 
-    // Draw stickers
-    const stickers = editor.querySelectorAll(".draggable");
-    stickers.forEach(sticker => {
-      const x = (parseFloat(sticker.getAttribute("data-x")) || 0) + rect.width / 2 - sticker.width / 2;
-      const y = (parseFloat(sticker.getAttribute("data-y")) || 0) + rect.height / 2 - sticker.height / 2;
-      const rotation = parseFloat(sticker.dataset.rotation) || 0;
-      const scale = parseFloat(sticker.dataset.scale) || 1;
+  // Draw main PFP
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      ctx.save();
-      ctx.translate(x + sticker.width / 2, y + sticker.height / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.scale(scale, scale);
-      ctx.drawImage(sticker, -sticker.width / 2, -sticker.height / 2, sticker.width, sticker.height);
-      ctx.restore();
-    });
+  // Scale factor (display vs. actual image)
+  const scale = canvas.width / preview.clientWidth;
 
-    // Download
-    const link = document.createElement("a");
-    link.download = "optimump2p-pfp.png";
-    link.href = canvas.toDataURL("image/png", 1.0); // max quality
-    link.click();
-  };
+  // Draw stickers at correct scaled position
+  document.querySelectorAll(".sticker").forEach((sticker) => {
+    const rect = sticker.getBoundingClientRect();
+    const parentRect = editor.getBoundingClientRect();
+    const x = (rect.left - parentRect.left) * scale;
+    const y = (rect.top - parentRect.top) * scale;
+    const width = rect.width * scale;
+    const height = rect.height * scale;
+    ctx.drawImage(sticker, x, y, width, height);
+  });
+
+  const link = document.createElement("a");
+  link.download = "Optimump2p_PFP.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
 });
+
