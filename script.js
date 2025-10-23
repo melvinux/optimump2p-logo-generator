@@ -55,8 +55,7 @@ function addSticker(src) {
           const target = event.target;
           const x = (parseFloat(target.getAttribute("data-x")) || 0) + event.dx;
           const y = (parseFloat(target.getAttribute("data-y")) || 0) + event.dy;
-
-          target.style.transform = `translate(${x}px, ${y}px) rotate(${target.dataset.rotation || 0}deg) scale(${target.dataset.scale || 1})`;
+          target.style.transform = `translate(${x}px, ${y}px)`;
           target.setAttribute("data-x", x);
           target.setAttribute("data-y", y);
         }
@@ -75,53 +74,47 @@ function addSticker(src) {
     });
 }
 
-// Download final PFP (high-res and aligned)
-downloadBtn.addEventListener("click", () => {
+// Download final PFP (fixed alignment + high quality)
+downloadBtn.addEventListener("click", async () => {
+  const rect = editor.getBoundingClientRect();
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
-  const rect = editor.getBoundingClientRect();
 
+  // Double resolution for clarity
   canvas.width = rect.width * 2;
   canvas.height = rect.height * 2;
   ctx.scale(2, 2);
 
+  // Draw base image
   const baseImage = new Image();
   baseImage.src = preview.src;
-  baseImage.onload = () => {
-    ctx.drawImage(baseImage, 0, 0, rect.width, rect.height);
+  await baseImage.decode();
+  ctx.drawImage(baseImage, 0, 0, rect.width, rect.height);
 
-    const stickers = editor.querySelectorAll(".draggable");
-    stickers.forEach(sticker => {
-      const x = (parseFloat(sticker.getAttribute("data-x")) || 0);
-      const y = (parseFloat(sticker.getAttribute("data-y")) || 0);
-      const rotation = parseFloat(sticker.dataset.rotation) || 0;
-      const scale = parseFloat(sticker.dataset.scale) || 1;
+  // Draw each sticker exactly by offset within editor
+  const stickerEls = editor.querySelectorAll(".draggable");
+  for (const sticker of stickerEls) {
+    const stickerRect = sticker.getBoundingClientRect();
+    const editorRect = editor.getBoundingClientRect();
 
-      const img = new Image();
-      img.src = sticker.src;
+    const relativeX = stickerRect.left - editorRect.left;
+    const relativeY = stickerRect.top - editorRect.top;
+    const width = stickerRect.width;
+    const height = stickerRect.height;
 
-      img.onload = () => {
-        const stickerRect = sticker.getBoundingClientRect();
-        const relativeX = stickerRect.left - rect.left;
-        const relativeY = stickerRect.top - rect.top;
+    const img = new Image();
+    img.src = sticker.src;
+    await img.decode();
+    ctx.drawImage(img, relativeX, relativeY, width, height);
+  }
 
-        ctx.save();
-        ctx.translate(relativeX + stickerRect.width / 2, relativeY + stickerRect.height / 2);
-        ctx.rotate((rotation * Math.PI) / 180);
-        ctx.scale(scale, scale);
-        ctx.drawImage(img, -stickerRect.width / 2, -stickerRect.height / 2, stickerRect.width, stickerRect.height);
-        ctx.restore();
-      };
-    });
-
-    setTimeout(() => {
-      const link = document.createElement("a");
-      link.download = "optimump2p-pfp.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    }, 1000);
-  };
+  // Export as PNG
+  const link = document.createElement("a");
+  link.download = "optimump2p-pfp.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
 });
+
 
 
 
