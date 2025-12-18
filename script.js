@@ -3,12 +3,13 @@ const ctx = canvas.getContext("2d");
 
 const upload = document.getElementById("pfpUpload");
 const downloadBtn = document.getElementById("download");
+const stickerContainer = document.getElementById("sticker-container");
 
 let baseImage = null;
 const stickers = [];
 let activeSticker = null;
 
-// transparent PNGs ONLY
+// Transparent PNG stickers only
 const stickerSources = [
   "assets/stickers/mascot.2.png",
   "assets/stickers/optimum-sticker 1.png",
@@ -16,15 +17,15 @@ const stickerSources = [
   "assets/stickers/Sticker.png"
 ];
 
-// Create sticker buttons
+// Create sticker thumbnails
 stickerSources.forEach(src => {
-  const btn = document.createElement("button");
-  btn.textContent = "Add Sticker";
-  btn.onclick = () => addSticker(src);
-  document.querySelector(".controls").prepend(btn);
+  const img = document.createElement("img");
+  img.src = src;
+  img.onclick = () => addSticker(src);
+  stickerContainer.appendChild(img);
 });
 
-// Upload base image
+// Upload PFP
 upload.addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -33,7 +34,7 @@ upload.addEventListener("change", e => {
   img.onload = () => {
     baseImage = img;
 
-    // 🔑 MATCH CANVAS TO IMAGE — NO QUALITY LOSS
+    // 🔒 CRITICAL: canvas size matches image exactly
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
 
@@ -76,11 +77,14 @@ function redraw() {
   });
 }
 
-// Drag logic (NO SHIFT POSSIBLE)
+// Mouse interaction (NO SHIFT)
 canvas.addEventListener("mousedown", e => {
   const rect = canvas.getBoundingClientRect();
-  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
 
   activeSticker = stickers.find(s =>
     mx > s.x - s.size / 2 &&
@@ -94,8 +98,11 @@ canvas.addEventListener("mousemove", e => {
   if (!activeSticker) return;
 
   const rect = canvas.getBoundingClientRect();
-  activeSticker.x = (e.clientX - rect.left) * (canvas.width / rect.width);
-  activeSticker.y = (e.clientY - rect.top) * (canvas.height / rect.height);
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  activeSticker.x = (e.clientX - rect.left) * scaleX;
+  activeSticker.y = (e.clientY - rect.top) * scaleY;
 
   redraw();
 });
@@ -104,15 +111,10 @@ canvas.addEventListener("mouseup", () => {
   activeSticker = null;
 });
 
-// Download — EXACTLY WHAT YOU SEE
+// Download — EXACT output
 downloadBtn.onclick = () => {
   const link = document.createElement("a");
   link.download = "optimump2p-pfp.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
 };
-
-
-
-
-
