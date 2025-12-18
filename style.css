@@ -63,6 +63,36 @@ button {
 button:hover {
   background: #094a8f;
 }
+#stickerPicker {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+#stickerPicker img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background: white;
+  padding: 6px;
+}
+
+#stickerPicker img:hover {
+  border-color: #0a66c2;
+  transform: scale(1.05);
+}
+
+#pfpCanvas {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  display: block;
+}
 
 /* Remove any old image-based styles (INTENTIONAL) */
 /* DO NOT add width, height, max-width, or transform to canvas */

@@ -19,11 +19,14 @@ const stickerSources = [
 ];
 
 // Create sticker buttons
-stickerSources.forEach((src, i) => {
-  const btn = document.createElement("button");
-  btn.textContent = `Add Sticker ${i + 1}`;
-  btn.onclick = () => addSticker(src);
-  controls.prepend(btn);
+const picker = document.getElementById("stickerPicker");
+
+stickerSources.forEach(src => {
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = "sticker";
+  img.onclick = () => addSticker(src);
+  picker.appendChild(img);
 });
 
 // Upload base image
