@@ -1,5 +1,5 @@
 /* ================================
-   Canvas & Context
+   Canvas + DPR Fix
 ================================ */
 const canvas = document.getElementById("pfpCanvas");
 const ctx = canvas.getContext("2d");
@@ -8,17 +8,14 @@ const upload = document.getElementById("pfpUpload");
 const downloadBtn = document.getElementById("download");
 const stickerContainer = document.getElementById("sticker-container");
 
-/* ================================
-   State
-================================ */
 let baseImage = null;
 const stickers = [];
 let activeSticker = null;
-let dragOffsetX = 0;
-let dragOffsetY = 0;
+let offsetX = 0;
+let offsetY = 0;
 
 /* ================================
-   Sticker sources (transparent PNGs)
+   Stickers (transparent PNGs)
 ================================ */
 const stickerSources = [
   "assets/stickers/mascot.2.png",
@@ -33,8 +30,7 @@ const stickerSources = [
 stickerSources.forEach(src => {
   const img = document.createElement("img");
   img.src = src;
-  img.alt = "Sticker";
-  img.addEventListener("click", () => addSticker(src));
+  img.onclick = () => addSticker(src);
   stickerContainer.appendChild(img);
 });
 
@@ -49,9 +45,15 @@ upload.addEventListener("change", e => {
   img.onload = () => {
     baseImage = img;
 
-    // 🔑 Canvas = image size (no scaling, no blur)
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = img.naturalWidth * dpr;
+    canvas.height = img.naturalHeight * dpr;
+
+    canvas.style.width = img.naturalWidth + "px";
+    canvas.style.height = img.naturalHeight + "px";
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     redraw();
   };
@@ -66,9 +68,9 @@ function addSticker(src) {
   img.onload = () => {
     stickers.push({
       img,
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      size: canvas.width * 0.25
+      x: canvas.width / (window.devicePixelRatio || 1) / 2,
+      y: canvas.height / (window.devicePixelRatio || 1) / 2,
+      size: canvas.width / (window.devicePixelRatio || 1) * 0.25
     });
     redraw();
   };
@@ -76,7 +78,7 @@ function addSticker(src) {
 }
 
 /* ================================
-   Redraw canvas
+   Redraw
 ================================ */
 function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -97,12 +99,12 @@ function redraw() {
 }
 
 /* ================================
-   Mouse position helper
+   Mouse helper (DPR safe)
 ================================ */
 function getMousePos(e) {
   const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
+  const scaleX = canvas.width / rect.width / (window.devicePixelRatio || 1);
+  const scaleY = canvas.height / rect.height / (window.devicePixelRatio || 1);
 
   return {
     x: (e.clientX - rect.left) * scaleX,
@@ -111,7 +113,7 @@ function getMousePos(e) {
 }
 
 /* ================================
-   Drag logic (NO SHIFT)
+   Drag (LOCKED)
 ================================ */
 canvas.addEventListener("mousedown", e => {
   const { x, y } = getMousePos(e);
@@ -125,8 +127,8 @@ canvas.addEventListener("mousedown", e => {
       y < s.y + s.size / 2
     ) {
       activeSticker = s;
-      dragOffsetX = x - s.x;
-      dragOffsetY = y - s.y;
+      offsetX = x - s.x;
+      offsetY = y - s.y;
       break;
     }
   }
@@ -136,8 +138,8 @@ canvas.addEventListener("mousemove", e => {
   if (!activeSticker) return;
 
   const { x, y } = getMousePos(e);
-  activeSticker.x = x - dragOffsetX;
-  activeSticker.y = y - dragOffsetY;
+  activeSticker.x = x - offsetX;
+  activeSticker.y = y - offsetY;
 
   redraw();
 });
@@ -151,11 +153,11 @@ canvas.addEventListener("mouseleave", () => {
 });
 
 /* ================================
-   Download (EXACT PIXELS)
+   Download (PIXEL PERFECT)
 ================================ */
-downloadBtn.addEventListener("click", () => {
+downloadBtn.onclick = () => {
   const link = document.createElement("a");
   link.download = "optimump2p-pfp.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
-});
+};
