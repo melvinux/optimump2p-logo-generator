@@ -8,9 +8,11 @@ const stickerPicker = document.getElementById("stickerPicker");
 let baseImage = null;
 const stickers = [];
 let activeSticker = null;
-let mode = null; // "drag" or "resize"
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+let isResizing = false;
 
-// 🔒 Transparent PNGs only
+// Transparent PNG stickers
 const stickerSources = [
   "assets/stickers/mascot.2.png",
   "assets/stickers/optimum-sticker 1.png",
@@ -18,8 +20,7 @@ const stickerSources = [
   "assets/stickers/Sticker.png"
 ];
 
-
-// ---------- Sticker Picker (Images, not buttons) ----------
+// ---------- Sticker Picker ----------
 stickerSources.forEach(src => {
   const img = new Image();
   img.src = src;
@@ -27,8 +28,7 @@ stickerSources.forEach(src => {
   stickerPicker.appendChild(img);
 });
 
-
-// ---------- Upload Base Image ----------
+// ---------- Upload ----------
 upload.addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -37,7 +37,7 @@ upload.addEventListener("change", e => {
   img.onload = () => {
     baseImage = img;
 
-    // 🔑 Canvas matches image EXACTLY (no blur, no shift)
+    // HARD LOCK canvas to image resolution
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
 
@@ -45,7 +45,6 @@ upload.addEventListener("change", e => {
   };
   img.src = URL.createObjectURL(file);
 });
-
 
 // ---------- Add Sticker ----------
 function addSticker(src) {
@@ -62,8 +61,7 @@ function addSticker(src) {
   img.src = src;
 }
 
-
-// ---------- Redraw ----------
+// ---------- Draw ----------
 function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -80,20 +78,19 @@ function redraw() {
       s.size
     );
 
-    // resize handle
+    // resize handle (visible + reliable)
     ctx.fillStyle = "#0a66c2";
     ctx.fillRect(
-      s.x + s.size / 2 - 10,
-      s.y + s.size / 2 - 10,
-      10,
-      10
+      s.x + s.size / 2 - 14,
+      s.y + s.size / 2 - 14,
+      14,
+      14
     );
   });
 }
 
-
-// ---------- Mouse / Touch Helpers ----------
-function getPointerPos(e) {
+// ---------- Pointer Position (LOCKED) ----------
+function getPos(e) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
@@ -107,72 +104,69 @@ function getPointerPos(e) {
   };
 }
 
-
 // ---------- Pointer Down ----------
 function pointerDown(e) {
-  const pos = getPointerPos(e);
+  e.preventDefault();
+  const pos = getPos(e);
 
   activeSticker = null;
-  mode = null;
+  isResizing = false;
 
   for (let i = stickers.length - 1; i >= 0; i--) {
     const s = stickers[i];
 
-    // resize handle
+    // Resize handle FIRST
     if (
-      pos.x > s.x + s.size / 2 - 12 &&
-      pos.x < s.x + s.size / 2 &&
-      pos.y > s.y + s.size / 2 - 12 &&
-      pos.y < s.y + s.size / 2
+      pos.x >= s.x + s.size / 2 - 14 &&
+      pos.x <= s.x + s.size / 2 &&
+      pos.y >= s.y + s.size / 2 - 14 &&
+      pos.y <= s.y + s.size / 2
     ) {
       activeSticker = s;
-      mode = "resize";
+      isResizing = true;
       return;
     }
 
-    // drag body
+    // Drag body
     if (
-      pos.x > s.x - s.size / 2 &&
-      pos.x < s.x + s.size / 2 &&
-      pos.y > s.y - s.size / 2 &&
-      pos.y < s.y + s.size / 2
+      pos.x >= s.x - s.size / 2 &&
+      pos.x <= s.x + s.size / 2 &&
+      pos.y >= s.y - s.size / 2 &&
+      pos.y <= s.y + s.size / 2
     ) {
       activeSticker = s;
-      mode = "drag";
+      dragOffsetX = pos.x - s.x;
+      dragOffsetY = pos.y - s.y;
       return;
     }
   }
 }
 
-
 // ---------- Pointer Move ----------
 function pointerMove(e) {
   if (!activeSticker) return;
+  e.preventDefault();
 
-  const pos = getPointerPos(e);
+  const pos = getPos(e);
 
-  if (mode === "drag") {
-    activeSticker.x = pos.x;
-    activeSticker.y = pos.y;
-  }
-
-  if (mode === "resize") {
+  if (isResizing) {
     activeSticker.size = Math.max(
       40,
       Math.abs(pos.x - activeSticker.x) * 2
     );
+  } else {
+    activeSticker.x = pos.x - dragOffsetX;
+    activeSticker.y = pos.y - dragOffsetY;
   }
 
   redraw();
 }
 
-
 // ---------- Pointer Up ----------
 function pointerUp() {
   activeSticker = null;
-  mode = null;
+  isResizing = false;
 }
-
 
 // ---------- Events ----------
 canvas.addEventListener("mousedown", pointerDown);
@@ -182,7 +176,6 @@ canvas.addEventListener("mouseup", pointerUp);
 canvas.addEventListener("touchstart", pointerDown, { passive: false });
 canvas.addEventListener("touchmove", pointerMove, { passive: false });
 canvas.addEventListener("touchend", pointerUp);
-
 
 // ---------- Download ----------
 downloadBtn.onclick = () => {
