@@ -1,69 +1,67 @@
-/* Reset */
-* {
-  box-sizing: border-box;
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f4f7fc;
   margin: 0;
   padding: 0;
-}
-
-/* Page */
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f4f7fc;
-  color: #333;
   text-align: center;
 }
 
-/* Header */
 header {
-  background-color: #0a66c2;
-  color: #ffffff;
+  background: #0a66c2;
+  color: white;
   padding: 20px;
 }
 
 .logo {
   width: 80px;
-  display: block;
-  margin: 0 auto 10px;
+  margin-bottom: 10px;
 }
 
-/* Upload section */
 .upload-section {
-  margin: 20px 0;
+  margin: 20px;
 }
 
-/* Sticker buttons */
+#sticker-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+#sticker-container img {
+  width: 80px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: 0.2s;
+}
+
+#sticker-container img:hover {
+  transform: scale(1.08);
+}
+
+canvas {
+  display: block;
+  margin: 20px auto;
+  border-radius: 10px;
+}
+
 .controls {
-  margin: 20px 0;
+  margin-bottom: 30px;
 }
 
-.controls button {
-  padding: 10px 18px;
-  margin: 5px;
-  font-size: 15px;
-  background-color: #0a66c2;
-  color: #ffffff;
+button {
+  padding: 12px 20px;
+  font-size: 16px;
+  background: #0a66c2;
+  color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
-.controls button:hover {
-  background-color: #094a8f;
-}
-
-/* Preview / Canvas area */
-.preview-area {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-}
-
-/* ⚠️ CRITICAL: Canvas MUST NOT be scaled */
-#pfpCanvas {
-  display: block;
-  margin: 0 auto;
-  background: transparent;
+button:hover {
+  background: #094a8f;
 }
 
 /* Remove any old image-based styles (INTENTIONAL) */
