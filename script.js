@@ -3,14 +3,14 @@ const ctx = canvas.getContext("2d");
 
 const upload = document.getElementById("pfpUpload");
 const downloadBtn = document.getElementById("download");
-const controls = document.querySelector(".controls");
+const stickerPicker = document.getElementById("stickerPicker");
 
 let baseImage = null;
-let stickers = [];
+const stickers = [];
 let activeSticker = null;
 let mode = null; // "drag" or "resize"
 
-// 👉 YOUR TRANSPARENT PNG STICKERS
+// 🔒 Transparent PNGs only
 const stickerSources = [
   "assets/stickers/mascot.2.png",
   "assets/stickers/optimum-sticker 1.png",
@@ -18,18 +18,17 @@ const stickerSources = [
   "assets/stickers/Sticker.png"
 ];
 
-// Create sticker buttons
-const picker = document.getElementById("stickerPicker");
 
+// ---------- Sticker Picker (Images, not buttons) ----------
 stickerSources.forEach(src => {
-  const img = document.createElement("img");
+  const img = new Image();
   img.src = src;
-  img.alt = "sticker";
   img.onclick = () => addSticker(src);
-  picker.appendChild(img);
+  stickerPicker.appendChild(img);
 });
 
-// Upload base image
+
+// ---------- Upload Base Image ----------
 upload.addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
@@ -38,7 +37,7 @@ upload.addEventListener("change", e => {
   img.onload = () => {
     baseImage = img;
 
-    // 🔒 CRITICAL: canvas = image resolution (no blur, no shift)
+    // 🔑 Canvas matches image EXACTLY (no blur, no shift)
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
 
@@ -47,7 +46,8 @@ upload.addEventListener("change", e => {
   img.src = URL.createObjectURL(file);
 });
 
-// Add sticker
+
+// ---------- Add Sticker ----------
 function addSticker(src) {
   const img = new Image();
   img.onload = () => {
@@ -62,7 +62,8 @@ function addSticker(src) {
   img.src = src;
 }
 
-// Redraw everything
+
+// ---------- Redraw ----------
 function redraw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -78,21 +79,38 @@ function redraw() {
       s.size,
       s.size
     );
+
+    // resize handle
+    ctx.fillStyle = "#0a66c2";
+    ctx.fillRect(
+      s.x + s.size / 2 - 10,
+      s.y + s.size / 2 - 10,
+      10,
+      10
+    );
   });
 }
 
-// Mouse helpers (NO SHIFT EVER)
-function getMousePos(e) {
+
+// ---------- Mouse / Touch Helpers ----------
+function getPointerPos(e) {
   const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
   return {
-    x: (e.clientX - rect.left) * (canvas.width / rect.width),
-    y: (e.clientY - rect.top) * (canvas.height / rect.height)
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY
   };
 }
 
-// Mouse down
-canvas.addEventListener("mousedown", e => {
-  const { x, y } = getMousePos(e);
+
+// ---------- Pointer Down ----------
+function pointerDown(e) {
+  const pos = getPointerPos(e);
 
   activeSticker = null;
   mode = null;
@@ -100,62 +118,73 @@ canvas.addEventListener("mousedown", e => {
   for (let i = stickers.length - 1; i >= 0; i--) {
     const s = stickers[i];
 
-    const half = s.size / 2;
-    const resizeZone = 12;
-
-    // Resize corner (bottom-right)
+    // resize handle
     if (
-      x > s.x + half - resizeZone &&
-      x < s.x + half &&
-      y > s.y + half - resizeZone &&
-      y < s.y + half
+      pos.x > s.x + s.size / 2 - 12 &&
+      pos.x < s.x + s.size / 2 &&
+      pos.y > s.y + s.size / 2 - 12 &&
+      pos.y < s.y + s.size / 2
     ) {
       activeSticker = s;
       mode = "resize";
       return;
     }
 
-    // Drag zone
+    // drag body
     if (
-      x > s.x - half &&
-      x < s.x + half &&
-      y > s.y - half &&
-      y < s.y + half
+      pos.x > s.x - s.size / 2 &&
+      pos.x < s.x + s.size / 2 &&
+      pos.y > s.y - s.size / 2 &&
+      pos.y < s.y + s.size / 2
     ) {
       activeSticker = s;
       mode = "drag";
       return;
     }
   }
-});
+}
 
-// Mouse move
-canvas.addEventListener("mousemove", e => {
+
+// ---------- Pointer Move ----------
+function pointerMove(e) {
   if (!activeSticker) return;
 
-  const { x, y } = getMousePos(e);
+  const pos = getPointerPos(e);
 
   if (mode === "drag") {
-    activeSticker.x = x;
-    activeSticker.y = y;
+    activeSticker.x = pos.x;
+    activeSticker.y = pos.y;
   }
 
   if (mode === "resize") {
-    const dx = x - activeSticker.x;
-    const dy = y - activeSticker.y;
-    activeSticker.size = Math.max(40, Math.max(dx, dy) * 2);
+    activeSticker.size = Math.max(
+      40,
+      Math.abs(pos.x - activeSticker.x) * 2
+    );
   }
 
   redraw();
-});
+}
 
-// Mouse up
-canvas.addEventListener("mouseup", () => {
+
+// ---------- Pointer Up ----------
+function pointerUp() {
   activeSticker = null;
   mode = null;
-});
+}
 
-// Download (EXACT EXPORT)
+
+// ---------- Events ----------
+canvas.addEventListener("mousedown", pointerDown);
+canvas.addEventListener("mousemove", pointerMove);
+canvas.addEventListener("mouseup", pointerUp);
+
+canvas.addEventListener("touchstart", pointerDown, { passive: false });
+canvas.addEventListener("touchmove", pointerMove, { passive: false });
+canvas.addEventListener("touchend", pointerUp);
+
+
+// ---------- Download ----------
 downloadBtn.onclick = () => {
   const link = document.createElement("a");
   link.download = "optimump2p-pfp.png";
