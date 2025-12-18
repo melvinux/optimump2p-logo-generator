@@ -1,15 +1,22 @@
+/* Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Page */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f4f7fc;
-  margin: 0;
-  padding: 0;
-  text-align: center;
   color: #333;
+  text-align: center;
 }
 
+/* Header */
 header {
   background-color: #0a66c2;
-  color: white;
+  color: #ffffff;
   padding: 20px;
 }
 
@@ -19,70 +26,45 @@ header {
   margin: 0 auto 10px;
 }
 
-.upload-section, .sticker-section {
-  margin: 20px;
+/* Upload section */
+.upload-section {
+  margin: 20px 0;
 }
 
-#sticker-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 15px;
-}
-
-#sticker-container img {
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
-  cursor: pointer;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  transition: 0.2s;
-}
-
-#sticker-container img:hover {
-  border-color: #0a66c2;
-  transform: scale(1.05);
-}
-
-.preview-area {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-#editor {
-  position: relative;
-  display: inline-block;
-}
-
-#preview {
-  max-width: 300px;
-  border-radius: 10px;
-}
-
-.sticker {
-  position: absolute;
-  width: 80px;
-  cursor: move;
-  user-select: none;
-}
-
+/* Sticker buttons */
 .controls {
-  margin-top: 20px;
+  margin: 20px 0;
 }
 
-button {
-  padding: 10px 20px;
-  font-size: 16px;
+.controls button {
+  padding: 10px 18px;
+  margin: 5px;
+  font-size: 15px;
   background-color: #0a66c2;
-  color: white;
+  color: #ffffff;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: 0.2s;
+  transition: background-color 0.2s ease;
 }
 
-button:hover {
+.controls button:hover {
   background-color: #094a8f;
 }
+
+/* Preview / Canvas area */
+.preview-area {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+/* ⚠️ CRITICAL: Canvas MUST NOT be scaled */
+#pfpCanvas {
+  display: block;
+  margin: 0 auto;
+  background: transparent;
+}
+
+/* Remove any old image-based styles (INTENTIONAL) */
+/* DO NOT add width, height, max-width, or transform to canvas */
