@@ -1,13 +1,31 @@
-<div class="preview-area">
-  <div id="editor">
-    <img id="preview" />
-  </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optimump2p PFP Generator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 
-<div id="sticker-container"></div>
+<header>
+  <img src="assets/optimump2p-logo.png" class="logo" />
+  <h1>Optimump2p PFP Generator</h1>
+</header>
+
+<section class="upload-section">
+  <h2>Upload your PFP</h2>
+  <input type="file" id="pfpUpload" accept="image/*">
+</section>
+
+<section id="sticker-container"></section>
+
+<canvas id="pfpCanvas"></canvas>
 
 <div class="controls">
-  <button id="download">Download</button>
+  <button id="download">Download PFP</button>
 </div>
 
-<canvas id="exportCanvas" style="display:none;"></canvas>
+<script src="script.js"></script>
+</body>
+</html>

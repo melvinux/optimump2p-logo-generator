@@ -1,0 +1,24 @@
+[33mcb6444a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fix sticker drag, resize, and export alignment
+[33mc87c423[m Fix sticker drag & resize with stable canvas export
+[33mf4cb2e1[m Make Optimum stickers transparent PNGs
+[33m5daf1db[m Fix DPR canvas scaling and stop sticker shifting
+[33m2ccde61[m Fix sticker drift and preserve image quality
+[33mfa9bb90[m Final fix: no sticker shift, full quality canvas
+[33m7e7e9b1[m Final fix: no sticker shift, full quality canvas
+[33mb110688[m Fix canvas styling, prevent sticker shift and quality loss
+[33m5d597c8[m Fix sticker drift using canvas-only rendering
+[33m2f4f5cf[m Fix canvas export and sticker positioning
+[33m5a7f042[m Fix sticker misalignment and improve image quality
+[33m38cc6df[m Fix sticker misalignment and improve image quality
+[33m8c5a87a[m Fix sticker misalignment and improve image quality
+[33me66a555[m Fix sticker position and maintain image quality
+[33m253f3f4[m Fix sticker position and image quality
+[33mebe94e0[m Fixed image quality and sticker alignment on download
+[33m89949f1[m Fixed image quality and sticker alignment on download
+[33m328af78[m Fixed image quality and sticker alignment on download
+[33mb6c5df7[m Add draggable & resizable sticker feature
+[33md424aa2[m Add Optimump2p sticker support
+[33m92a509a[m Add Optimump2p logo watermark to generated PFPs
+[33m2bca099[m Clean script and fix upload scaling
+[33m1ceb6be[m Added upload section for PFPs
+[33mbb4b7a7[m Initial commit
