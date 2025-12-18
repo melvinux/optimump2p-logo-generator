@@ -1,161 +1,112 @@
-const canvas = document.getElementById("pfpCanvas");
+const upload = document.getElementById("pfpUpload");
+const preview = document.getElementById("preview");
+const editor = document.getElementById("editor");
+const downloadBtn = document.getElementById("download");
+const canvas = document.getElementById("exportCanvas");
 const ctx = canvas.getContext("2d");
 
-const upload = document.getElementById("pfpUpload");
-const downloadBtn = document.getElementById("download");
-
-let baseImage = null;
-const stickers = [];
-
-let activeSticker = null;
-let isResizing = false;
-let offsetX = 0;
-let offsetY = 0;
-
-const HANDLE_SIZE = 12;
-
-// Transparent PNGs ONLY
-const stickerSources = [
-  "assets/stickers/mascot.2.png",
-  "assets/stickers/optimum-sticker 1.png",
-  "assets/stickers/optimum-sticker 2.png",
-  "assets/stickers/Sticker.png"
-];
-
-// Create buttons
-stickerSources.forEach(src => {
-  const btn = document.createElement("button");
-  btn.textContent = "Add Sticker";
-  btn.onclick = () => addSticker(src);
-  document.querySelector(".controls").prepend(btn);
-});
-
-// Upload base image
 upload.addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
+  preview.src = URL.createObjectURL(file);
+});
 
+// Add sticker thumbnails
+const stickers = [
+  "assets/stickers/mascot.2.png",
+  "assets/stickers/optimum-sticker 1.png",
+  "assets/stickers/optimum-sticker 2.png"
+];
+
+stickers.forEach(src => {
+  const img = document.createElement("img");
+  img.src = src;
+  img.style.width = "60px";
+  img.style.cursor = "pointer";
+  img.onclick = () => addSticker(src);
+  document.getElementById("sticker-container").appendChild(img);
+});
+
+function addSticker(src) {
+  const sticker = document.createElement("img");
+  sticker.src = src;
+  sticker.className = "sticker";
+  sticker.style.left = "110px";
+  sticker.style.top = "110px";
+
+  const handle = document.createElement("div");
+  handle.className = "sticker-handle";
+  sticker.appendChild(handle);
+
+  editor.appendChild(sticker);
+
+  makeDraggable(sticker);
+  makeResizable(sticker, handle);
+}
+
+// Drag logic
+function makeDraggable(el) {
+  let startX, startY;
+
+  el.onmousedown = e => {
+    if (e.target.classList.contains("sticker-handle")) return;
+    startX = e.clientX - el.offsetLeft;
+    startY = e.clientY - el.offsetTop;
+
+    document.onmousemove = ev => {
+      el.style.left = ev.clientX - startX + "px";
+      el.style.top = ev.clientY - startY + "px";
+    };
+
+    document.onmouseup = () => {
+      document.onmousemove = null;
+    };
+  };
+}
+
+// Resize logic
+function makeResizable(sticker, handle) {
+  handle.onmousedown = e => {
+    e.stopPropagation();
+    const startSize = sticker.offsetWidth;
+    const startX = e.clientX;
+
+    document.onmousemove = ev => {
+      sticker.style.width = startSize + (ev.clientX - startX) + "px";
+    };
+
+    document.onmouseup = () => {
+      document.onmousemove = null;
+    };
+  };
+}
+
+// EXPORT (no shift, full quality)
+downloadBtn.onclick = () => {
   const img = new Image();
   img.onload = () => {
-    baseImage = img;
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
-    redraw();
-  };
-  img.src = URL.createObjectURL(file);
-});
 
-// Add sticker
-function addSticker(src) {
-  const img = new Image();
-  img.onload = () => {
-    stickers.push({
-      img,
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      size: canvas.width * 0.25
+    ctx.drawImage(img, 0, 0);
+
+    const scale = img.naturalWidth / editor.offsetWidth;
+
+    document.querySelectorAll(".sticker").forEach(s => {
+      ctx.drawImage(
+        s,
+        s.offsetLeft * scale,
+        s.offsetTop * scale,
+        s.offsetWidth * scale,
+        s.offsetHeight * scale
+      );
     });
-    redraw();
+
+    const link = document.createElement("a");
+    link.download = "optimump2p-pfp.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
   };
-  img.src = src;
-}
-
-// Redraw canvas
-function redraw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (baseImage) {
-    ctx.drawImage(baseImage, 0, 0);
-  }
-
-  stickers.forEach(s => {
-    ctx.drawImage(
-      s.img,
-      s.x - s.size / 2,
-      s.y - s.size / 2,
-      s.size,
-      s.size
-    );
-
-    // Resize handle (bottom-right)
-    ctx.fillStyle = "#0a66c2";
-    ctx.fillRect(
-      s.x + s.size / 2 - HANDLE_SIZE,
-      s.y + s.size / 2 - HANDLE_SIZE,
-      HANDLE_SIZE,
-      HANDLE_SIZE
-    );
-  });
-}
-
-// Mouse helpers
-function getMousePos(e) {
-  const rect = canvas.getBoundingClientRect();
-  return {
-    x: (e.clientX - rect.left) * (canvas.width / rect.width),
-    y: (e.clientY - rect.top) * (canvas.height / rect.height)
-  };
-}
-
-// Mouse down
-canvas.addEventListener("mousedown", e => {
-  const { x, y } = getMousePos(e);
-
-  for (let i = stickers.length - 1; i >= 0; i--) {
-    const s = stickers[i];
-
-    const inSticker =
-      x > s.x - s.size / 2 &&
-      x < s.x + s.size / 2 &&
-      y > s.y - s.size / 2 &&
-      y < s.y + s.size / 2;
-
-    const inHandle =
-      x > s.x + s.size / 2 - HANDLE_SIZE &&
-      y > s.y + s.size / 2 - HANDLE_SIZE;
-
-    if (inHandle) {
-      activeSticker = s;
-      isResizing = true;
-      return;
-    }
-
-    if (inSticker) {
-      activeSticker = s;
-      offsetX = x - s.x;
-      offsetY = y - s.y;
-      return;
-    }
-  }
-});
-
-// Mouse move
-canvas.addEventListener("mousemove", e => {
-  if (!activeSticker) return;
-
-  const { x, y } = getMousePos(e);
-
-  if (isResizing) {
-    activeSticker.size = Math.max(40, x - activeSticker.x + activeSticker.size / 2);
-  } else {
-    activeSticker.x = x - offsetX;
-    activeSticker.y = y - offsetY;
-  }
-
-  redraw();
-});
-
-// Mouse up
-canvas.addEventListener("mouseup", () => {
-  activeSticker = null;
-  isResizing = false;
-});
-
-// Download (exact output)
-downloadBtn.onclick = () => {
-  const link = document.createElement("a");
-  link.download = "optimump2p-pfp.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
+  img.src = preview.src;
 };
 

@@ -1,68 +1,34 @@
-body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f4f7fc;
-  margin: 0;
-  padding: 0;
-  text-align: center;
-}
-
-header {
-  background: #0a66c2;
-  color: white;
-  padding: 20px;
-}
-
-.logo {
-  width: 80px;
-  margin-bottom: 10px;
-}
-
-.upload-section {
-  margin: 20px;
-}
-
-#sticker-container {
+.preview-area {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  flex-wrap: wrap;
-  margin-bottom: 15px;
+  margin-top: 20px;
 }
 
-#sticker-container img {
-  width: 80px;
-  cursor: pointer;
-  border-radius: 10px;
-  transition: 0.2s;
+#editor {
+  position: relative;
+  width: 300px;
 }
 
-#sticker-container img:hover {
-  transform: scale(1.08);
-}
-
-canvas {
+#preview {
+  width: 100%;
+  border-radius: 12px;
   display: block;
-  margin: 20px auto;
-  border-radius: 10px;
 }
 
-.controls {
-  margin-bottom: 30px;
+.sticker {
+  position: absolute;
+  width: 80px;
+  cursor: move;
+  user-select: none;
 }
 
-button {
-  padding: 12px 20px;
-  font-size: 16px;
+.sticker-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
   background: #0a66c2;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+  right: -6px;
+  bottom: -6px;
+  cursor: se-resize;
 }
 
-button:hover {
-  background: #094a8f;
-}
-
-/* Remove any old image-based styles (INTENTIONAL) */
-/* DO NOT add width, height, max-width, or transform to canvas */
