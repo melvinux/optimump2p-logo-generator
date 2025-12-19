@@ -1,35 +1,56 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Optimump2p PFP Generator</title>
+
+  <!-- Main Styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<header>
-  <img src="assets/optimump2p-logo.png" class="logo" />
-  <h1>Optimump2p PFP Generator</h1>
-</header>
+  <!-- Header -->
+  <header>
+    <img src="assets/optimump2p-logo.png" class="logo" alt="Optimump2p Logo" />
+    <h1>Optimump2p PFP Generator</h1>
+  </header>
 
-<section class="upload-section">
-  <h2>Upload your PFP</h2>
-  <input type="file" id="pfpUpload" accept="image/*">
-</section>
+  <!-- Main Container -->
+  <main class="container">
 
-<section id="sticker-container"></section>
+    <!-- Upload Section -->
+    <section class="upload-section">
+      <h2>Upload your PFP</h2>
 
-<div class="canvas-wrapper">
-  <canvas id="pfpCanvas"></canvas>
+      <!-- Styled upload button -->
+      <label class="action-btn upload-label">
+        Upload Image
+        <input type="file" id="pfpUpload" accept="image/*">
+      </label>
+    </section>
+
+    <!-- Sticker Picker -->
+    <section id="sticker-container">
+      <div id="stickerPicker"></div>
+    </section>
+
+    <!-- Canvas -->
+    <div class="canvas-wrapper">
+      <canvas id="pfpCanvas"></canvas>
+    </div>
+
+   <div class="controls">
+  <button id="flip" class="action-btn">Flip</button>
+  <button id="delete" class="action-btn">Delete Sticker</button>
+  <button id="download" class="action-btn">Download PFP</button>
 </div>
 
-<div class="controls">
-  <div id="stickerPicker"></div>
-  <button id="download">Download PFP</button>
-</div>
 
 
-<script src="script.js"></script>
+  </main>
+
+  <!-- Script -->
+  <script src="script.js"></script>
 </body>
 </html>

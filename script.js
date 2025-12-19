@@ -5,9 +5,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const upload = document.getElementById("pfpUpload");
   const downloadBtn = document.getElementById("download");
+  const flipBtn = document.getElementById("flip");
+  const deleteBtn = document.getElementById("delete");
   const stickerPicker = document.getElementById("stickerPicker");
 
   let baseImage = null;
+  let flipped = false;
   const stickers = [];
   let activeSticker = null;
   let mode = null;
@@ -19,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "assets/stickers/Sticker.png"
   ];
 
-  // Sticker picker
+  /* ---------- Sticker Picker ---------- */
   stickerSources.forEach(src => {
     const img = new Image();
     img.src = src;
@@ -27,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     stickerPicker.appendChild(img);
   });
 
-  // Upload image
+  /* ---------- Upload ---------- */
   upload.addEventListener("change", e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -37,12 +40,14 @@ document.addEventListener("DOMContentLoaded", () => {
       baseImage = img;
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
+      stickers.length = 0;
+      activeSticker = null;
       redraw();
     };
     img.src = URL.createObjectURL(file);
   });
 
-  // Add sticker
+  /* ---------- Add Sticker ---------- */
   function addSticker(src) {
     const img = new Image();
     img.onload = () => {
@@ -50,16 +55,24 @@ document.addEventListener("DOMContentLoaded", () => {
         img,
         x: canvas.width / 2,
         y: canvas.height / 2,
-        size: canvas.width * 0.2
+        size: canvas.width * 0.25
       });
+      activeSticker = stickers[stickers.length - 1];
       redraw();
     };
     img.src = src;
   }
 
-  // Draw
-  function redraw(showHandles = true) {
+  /* ---------- Draw ---------- */
+  function redraw(showOutline = true) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save();
+    if (flipped) {
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+    }
+
     if (baseImage) ctx.drawImage(baseImage, 0, 0);
 
     stickers.forEach(s => {
@@ -71,28 +84,33 @@ document.addEventListener("DOMContentLoaded", () => {
         s.size
       );
 
-      // Only draw blue resize dot if showHandles is true
-      if (showHandles) {
-        ctx.fillStyle = "#0a66c2";
-        ctx.fillRect(
-          s.x + s.size / 2 - 14,
-          s.y + s.size / 2 - 14,
-          14,
-          14
+      if (showOutline && s === activeSticker) {
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(
+          s.x - s.size / 2,
+          s.y - s.size / 2,
+          s.size,
+          s.size
         );
+        ctx.setLineDash([]);
       }
     });
+
+    ctx.restore();
   }
 
+  /* ---------- Position ---------- */
   function getPos(e) {
     const rect = canvas.getBoundingClientRect();
-    return {
-      x: (e.clientX - rect.left) * (canvas.width / rect.width),
-      y: (e.clientY - rect.top) * (canvas.height / rect.height)
-    };
+    let x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    let y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    if (flipped) x = canvas.width - x;
+    return { x, y };
   }
 
-  // Pointer down
+  /* ---------- Pointer Down ---------- */
   canvas.addEventListener("pointerdown", e => {
     const pos = getPos(e);
     activeSticker = null;
@@ -100,32 +118,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     for (let i = stickers.length - 1; i >= 0; i--) {
       const s = stickers[i];
+      const half = s.size / 2;
 
-      if (
-        pos.x > s.x + s.size / 2 - 24 &&
-        pos.y > s.y + s.size / 2 - 24
-      ) {
-        activeSticker = s;
-        mode = "resize";
-        canvas.setPointerCapture(e.pointerId);
-        return;
-      }
+      const inside =
+        pos.x > s.x - half &&
+        pos.x < s.x + half &&
+        pos.y > s.y - half &&
+        pos.y < s.y + half;
 
-      if (
-        pos.x > s.x - s.size / 2 &&
-        pos.x < s.x + s.size / 2 &&
-        pos.y > s.y - s.size / 2 &&
-        pos.y < s.y + s.size / 2
-      ) {
+      if (inside) {
         activeSticker = s;
-        mode = "drag";
+
+        const edgeMargin = 20;
+        const nearEdge =
+          Math.abs(pos.x - (s.x - half)) < edgeMargin ||
+          Math.abs(pos.x - (s.x + half)) < edgeMargin ||
+          Math.abs(pos.y - (s.y - half)) < edgeMargin ||
+          Math.abs(pos.y - (s.y + half)) < edgeMargin;
+
+        mode = nearEdge ? "resize" : "drag";
         canvas.setPointerCapture(e.pointerId);
+        redraw();
         return;
       }
     }
+
+    redraw();
   });
 
-  // Pointer move
+  /* ---------- Pointer Move ---------- */
   canvas.addEventListener("pointermove", e => {
     if (!activeSticker) return;
     const pos = getPos(e);
@@ -138,27 +159,44 @@ document.addEventListener("DOMContentLoaded", () => {
     if (mode === "resize") {
       const dx = pos.x - activeSticker.x;
       const dy = pos.y - activeSticker.y;
-      activeSticker.size = Math.max(40, Math.hypot(dx, dy) * 2);
+      activeSticker.size = Math.max(60, Math.hypot(dx, dy) * 2);
     }
 
     redraw();
   });
 
-  // Pointer up
+  /* ---------- Pointer Up ---------- */
   canvas.addEventListener("pointerup", e => {
     canvas.releasePointerCapture(e.pointerId);
-    activeSticker = null;
     mode = null;
   });
 
-  // Download
+  /* ---------- Flip ---------- */
+  flipBtn.onclick = () => {
+    flipped = !flipped;
+    redraw();
+  };
+
+  /* ---------- Delete Sticker ---------- */
+  deleteBtn.onclick = () => {
+    if (!activeSticker) return;
+
+    const index = stickers.indexOf(activeSticker);
+    if (index !== -1) {
+      stickers.splice(index, 1);
+      activeSticker = stickers[stickers.length - 1] || null;
+      redraw();
+    }
+  };
+
+  /* ---------- Download ---------- */
   downloadBtn.onclick = () => {
-    redraw(false); // hide blue dots for download
+    redraw(false);
     const link = document.createElement("a");
     link.download = "optimump2p-pfp.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
-    redraw(); // redraw with handles again for editing
+    redraw();
   };
 });
 
