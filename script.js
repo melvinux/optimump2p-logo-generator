@@ -115,17 +115,20 @@ function pointerDown(e) {
   for (let i = stickers.length - 1; i >= 0; i--) {
     const s = stickers[i];
 
-    // Resize handle FIRST
-    if (
-      pos.x >= s.x + s.size / 2 - 14 &&
-      pos.x <= s.x + s.size / 2 &&
-      pos.y >= s.y + s.size / 2 - 14 &&
-      pos.y <= s.y + s.size / 2
-    ) {
-      activeSticker = s;
-      isResizing = true;
-      return;
-    }
+    // RESIZE ZONE (bottom-right 30px area)
+const resizeZone = 30;
+
+if (
+  pos.x > s.x + s.size / 2 - resizeZone &&
+  pos.x < s.x + s.size / 2 + resizeZone &&
+  pos.y > s.y + s.size / 2 - resizeZone &&
+  pos.y < s.y + s.size / 2 + resizeZone
+) {
+  activeSticker = s;
+  isResizing = true;
+  return;
+}
+
 
     // Drag body
     if (
@@ -149,15 +152,30 @@ function pointerMove(e) {
 
   const pos = getPos(e);
 
+  function pointerMove(e) {
+  if (!activeSticker) return;
+  e.preventDefault();
+
+  const pos = getPos(e);
+
+  // ✅ Resize ONLY
   if (isResizing) {
+    const dx = pos.x - activeSticker.x;
+    const dy = pos.y - activeSticker.y;
+
     activeSticker.size = Math.max(
       40,
-      Math.abs(pos.x - activeSticker.x) * 2
+      Math.max(Math.abs(dx), Math.abs(dy)) * 2
     );
-  } else {
+  }
+  // ✅ Drag ONLY
+  else {
     activeSticker.x = pos.x - dragOffsetX;
     activeSticker.y = pos.y - dragOffsetY;
   }
+
+  redraw();
+}
 
   redraw();
 }
