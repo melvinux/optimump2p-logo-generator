@@ -57,21 +57,33 @@ document.addEventListener("DOMContentLoaded", () => {
     img.src = src;
   }
 
-  // Draw everything
-  function redraw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (baseImage) ctx.drawImage(baseImage, 0, 0);
+  // Draw
+  function redraw(showHandles = true) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (baseImage) ctx.drawImage(baseImage, 0, 0);
 
-    stickers.forEach(s => {
-      ctx.drawImage(
-        s.img,
-        s.x - s.size / 2,
-        s.y - s.size / 2,
-        s.size,
-        s.size
+  stickers.forEach(s => {
+    ctx.drawImage(
+      s.img,
+      s.x - s.size / 2,
+      s.y - s.size / 2,
+      s.size,
+      s.size
+    );
+
+    // Only draw blue resize dot if showHandles is true
+    if (showHandles) {
+      ctx.fillStyle = "#0a66c2";
+      ctx.fillRect(
+        s.x + s.size / 2 - 14,
+        s.y + s.size / 2 - 14,
+        14,
+        14
       );
-    });
-  }
+    }
+  });
+}
+
 
   function getPos(e) {
     const rect = canvas.getBoundingClientRect();
@@ -81,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Pointer down (drag or resize)
+  // Pointer down
   canvas.addEventListener("pointerdown", e => {
     const pos = getPos(e);
     activeSticker = null;
@@ -90,13 +102,9 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let i = stickers.length - 1; i >= 0; i--) {
       const s = stickers[i];
 
-      // Mobile-friendly corner area for resizing
-      const cornerSize = s.size * 0.4;
       if (
-        pos.x > s.x + s.size / 2 - cornerSize &&
-        pos.x < s.x + s.size / 2 &&
-        pos.y > s.y + s.size / 2 - cornerSize &&
-        pos.y < s.y + s.size / 2
+        pos.x > s.x + s.size / 2 - 24 &&
+        pos.y > s.y + s.size / 2 - 24
       ) {
         activeSticker = s;
         mode = "resize";
@@ -104,7 +112,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Drag anywhere else inside sticker
       if (
         pos.x > s.x - s.size / 2 &&
         pos.x < s.x + s.size / 2 &&
@@ -130,10 +137,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (mode === "resize") {
-      // Increase/decrease size based on pointer distance from center
       const dx = pos.x - activeSticker.x;
       const dy = pos.y - activeSticker.y;
-      activeSticker.size = Math.max(40, activeSticker.size + dx * 0.5 + dy * 0.5);
+      activeSticker.size = Math.max(40, Math.hypot(dx, dy) * 2);
     }
 
     redraw();
@@ -146,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     mode = null;
   });
 
-  // Download image
+  // Download
   downloadBtn.onclick = () => {
     const link = document.createElement("a");
     link.download = "optimump2p-pfp.png";
@@ -154,4 +160,3 @@ document.addEventListener("DOMContentLoaded", () => {
     link.click();
   };
 });
-
