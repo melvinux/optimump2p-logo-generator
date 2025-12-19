@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
     img.src = src;
   }
 
-  // Draw
+  // Draw everything
   function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (baseImage) ctx.drawImage(baseImage, 0, 0);
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Pointer down
+  // Pointer down (drag or resize)
   canvas.addEventListener("pointerdown", e => {
     const pos = getPos(e);
     activeSticker = null;
@@ -90,7 +90,21 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let i = stickers.length - 1; i >= 0; i--) {
       const s = stickers[i];
 
-      // Select sticker if inside its area
+      // Mobile-friendly corner area for resizing
+      const cornerSize = s.size * 0.4;
+      if (
+        pos.x > s.x + s.size / 2 - cornerSize &&
+        pos.x < s.x + s.size / 2 &&
+        pos.y > s.y + s.size / 2 - cornerSize &&
+        pos.y < s.y + s.size / 2
+      ) {
+        activeSticker = s;
+        mode = "resize";
+        canvas.setPointerCapture(e.pointerId);
+        return;
+      }
+
+      // Drag anywhere else inside sticker
       if (
         pos.x > s.x - s.size / 2 &&
         pos.x < s.x + s.size / 2 &&
@@ -98,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
         pos.y < s.y + s.size / 2
       ) {
         activeSticker = s;
-        mode = e.shiftKey ? "resize" : "drag"; // Hold Shift to resize, otherwise drag
+        mode = "drag";
         canvas.setPointerCapture(e.pointerId);
         return;
       }
@@ -116,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (mode === "resize") {
+      // Increase/decrease size based on pointer distance from center
       const dx = pos.x - activeSticker.x;
       const dy = pos.y - activeSticker.y;
       activeSticker.size = Math.max(40, activeSticker.size + dx * 0.5 + dy * 0.5);
@@ -131,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     mode = null;
   });
 
-  // Download
+  // Download image
   downloadBtn.onclick = () => {
     const link = document.createElement("a");
     link.download = "optimump2p-pfp.png";
