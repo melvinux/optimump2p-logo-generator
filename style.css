@@ -1,148 +1,116 @@
-/* ===== Global Reset ===== */
-* {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
 body {
-  margin: 0;
-  padding: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background: #f4f7fc;
-  color: #0f172a;
+  margin: 0;
+  padding: 0;
   text-align: center;
 }
 
-/* ===== Header ===== */
 header {
-  padding: 18px;
-  font-size: 20px;
-  font-weight: 700;
   background: #0a66c2;
   color: white;
+  padding: 20px;
 }
 
-/* ===== Layout ===== */
-.container {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 16px;
+.logo {
+  width: 80px;
+  margin-bottom: 10px;
 }
 
-/* ===== Canvas ===== */
-canvas {
-  width: 100%;
-  max-width: 420px;
-  height: auto;
-  border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  margin: 16px 0;
-  touch-action: none;
+.upload-section {
+  margin: 20px;
 }
 
-/* ===== Sticker Picker ===== */
-#stickerPicker {
+#sticker-container {
   display: flex;
-  gap: 10px;
   justify-content: center;
+  gap: 15px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
 }
 
-#stickerPicker img {
-  width: 56px;
-  height: 56px;
-  border-radius: 10px;
+#sticker-container img {
+  width: 80px;
   cursor: pointer;
-  background: white;
-  padding: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-  transition: transform 0.15s ease;
+  border-radius: 10px;
+  transition: 0.2s;
 }
 
-#stickerPicker img:hover {
-  transform: scale(1.05);
+#sticker-container img:hover {
+  transform: scale(1.08);
 }
 
-/* ===== Button Group ===== */
+canvas {
+  display: block;
+  margin: 20px auto;
+  border-radius: 10px;
+}
+
 .controls {
+  margin-bottom: 30px;
+}
+
+button {
+  padding: 12px 20px;
+  font-size: 16px;
+  background: #0a66c2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #094a8f;
+}
+#stickerPicker {
   display: flex;
   gap: 12px;
   justify-content: center;
   flex-wrap: wrap;
-  margin-top: 12px;
+  margin-bottom: 16px;
 }
 
-/* ===== Action Buttons (BlindWarrior-style) ===== */
-.action-btn {
-  font-size: 15px;
-  font-weight: 600;
-  padding: 12px 22px;
-  border-radius: 10px;
-  border: none;
+#stickerPicker img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
   cursor: pointer;
-
-  background: #0a66c2;
-  color: #ffffff;
-
-  position: relative;
-  overflow: hidden;
-
-  transition:
-    background 0.25s ease,
-    transform 0.15s ease,
-    box-shadow 0.25s ease;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background: white;
+  padding: 6px;
 }
 
-/* Blue highlight line */
-.action-btn::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 3px;
-  width: 0;
-  background: #38bdf8;
-  transition: width 0.3s ease;
+#stickerPicker img:hover {
+  border-color: #0a66c2;
+  transform: scale(1.05);
 }
 
-/* Hover / focus */
-.action-btn:hover,
-.action-btn:focus-visible {
-  background: #084e96;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(10, 102, 194, 0.35);
-}
-
-.action-btn:hover::after,
-.action-btn:focus-visible::after {
+#pfpCanvas {
   width: 100%;
+  max-width: 360px; /* mobile friendly */
+  height: auto;
+  display: block;
+  margin: 20px auto;
+  border-radius: 16px;
 }
 
-/* Active */
-.action-btn:active {
-  transform: translateY(0);
-  box-shadow: none;
+#pfpCanvas {
+  touch-action: none;
 }
+/* ===== Logo Rendering Fix ===== */
+header .logo {
+  height: 44px;          /* pick a clean fixed height */
+  width: auto;
+  display: block;
+  margin: 0 auto 8px;
 
-/* ===== File Input (hidden but clickable via label) ===== */
-input[type="file"] {
-  display: none;
+  image-rendering: auto;
+  filter: none !important;
+  box-shadow: none !important;
+  transform: translateZ(0);
 }
-
-.upload-label {
-  display: inline-block;
-}
-
-/* ===== Mobile polish ===== */
-@media (max-width: 480px) {
-  .action-btn {
-    padding: 14px 26px;
-    font-size: 16px;
-  }
-}
-`
 
 /* Remove any old image-based styles (INTENTIONAL) */
 /* DO NOT add width, height, max-width, or transform to canvas */
