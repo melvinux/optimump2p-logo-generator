@@ -70,14 +70,6 @@ document.addEventListener("DOMContentLoaded", () => {
         s.size,
         s.size
       );
-
-      ctx.fillStyle = "#0a66c2";
-      ctx.fillRect(
-        s.x + s.size / 2 - 14,
-        s.y + s.size / 2 - 14,
-        14,
-        14
-      );
     });
   }
 
@@ -98,16 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     for (let i = stickers.length - 1; i >= 0; i--) {
       const s = stickers[i];
 
-      if (
-        pos.x > s.x + s.size / 2 - 24 &&
-        pos.y > s.y + s.size / 2 - 24
-      ) {
-        activeSticker = s;
-        mode = "resize";
-        canvas.setPointerCapture(e.pointerId);
-        return;
-      }
-
+      // Select sticker if inside its area
       if (
         pos.x > s.x - s.size / 2 &&
         pos.x < s.x + s.size / 2 &&
@@ -115,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
         pos.y < s.y + s.size / 2
       ) {
         activeSticker = s;
-        mode = "drag";
+        mode = e.shiftKey ? "resize" : "drag"; // Hold Shift to resize, otherwise drag
         canvas.setPointerCapture(e.pointerId);
         return;
       }
@@ -135,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (mode === "resize") {
       const dx = pos.x - activeSticker.x;
       const dy = pos.y - activeSticker.y;
-      activeSticker.size = Math.max(40, Math.hypot(dx, dy) * 2);
+      activeSticker.size = Math.max(40, activeSticker.size + dx * 0.5 + dy * 0.5);
     }
 
     redraw();
