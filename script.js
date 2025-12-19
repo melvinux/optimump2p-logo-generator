@@ -59,31 +59,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Draw
   function redraw(showHandles = true) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (baseImage) ctx.drawImage(baseImage, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (baseImage) ctx.drawImage(baseImage, 0, 0);
 
-  stickers.forEach(s => {
-    ctx.drawImage(
-      s.img,
-      s.x - s.size / 2,
-      s.y - s.size / 2,
-      s.size,
-      s.size
-    );
-
-    // Only draw blue resize dot if showHandles is true
-    if (showHandles) {
-      ctx.fillStyle = "#0a66c2";
-      ctx.fillRect(
-        s.x + s.size / 2 - 14,
-        s.y + s.size / 2 - 14,
-        14,
-        14
+    stickers.forEach(s => {
+      ctx.drawImage(
+        s.img,
+        s.x - s.size / 2,
+        s.y - s.size / 2,
+        s.size,
+        s.size
       );
-    }
-  });
-}
 
+      // Only draw blue resize dot if showHandles is true
+      if (showHandles) {
+        ctx.fillStyle = "#0a66c2";
+        ctx.fillRect(
+          s.x + s.size / 2 - 14,
+          s.y + s.size / 2 - 14,
+          14,
+          14
+        );
+      }
+    });
+  }
 
   function getPos(e) {
     const rect = canvas.getBoundingClientRect();
@@ -154,9 +153,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Download
   downloadBtn.onclick = () => {
+    redraw(false); // hide blue dots for download
     const link = document.createElement("a");
     link.download = "optimump2p-pfp.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
+    redraw(); // redraw with handles again for editing
   };
 });
+
