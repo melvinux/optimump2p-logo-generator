@@ -89,10 +89,13 @@ button:hover {
 
 #pfpCanvas {
   width: 100%;
+  max-width: 360px; /* mobile friendly */
   height: auto;
-  border-radius: 16px;
   display: block;
+  margin: 20px auto;
+  border-radius: 16px;
 }
+
 
 /* Remove any old image-based styles (INTENTIONAL) */
 /* DO NOT add width, height, max-width, or transform to canvas */
