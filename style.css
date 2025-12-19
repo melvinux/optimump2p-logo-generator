@@ -96,6 +96,9 @@ button:hover {
   border-radius: 16px;
 }
 
+#pfpCanvas {
+  touch-action: none;
+}
 
 /* Remove any old image-based styles (INTENTIONAL) */
 /* DO NOT add width, height, max-width, or transform to canvas */
